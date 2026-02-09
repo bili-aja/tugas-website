@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Makanan - sifouteen</title>
+
+  <style>
+    :root{
+      --maroon:#8b2a2a;
+      --card:#d7d0c7;
+      --line:#8b2a2a;
+    }
+
+    *{margin:0;padding:0;box-sizing:border-box;font-family:Arial, Helvetica, sans-serif;}
+    body{background:#fff;padding-bottom:20px;}
+
+    /* TOP */
+    .top{
+      padding:14px 16px;
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      border-bottom:2px solid #eee;
+    }
+    .logo{
+      color:var(--maroon);
+      font-weight:800;
+      font-size:22px;
+    }
+    
+    .cart{
+  font-size:26px;
+  cursor:pointer;
+  position:relative;
+  user-select:none;
+}
+.badge{
+  position:absolute;
+  top:-8px;
+  right:-10px;
+  background:var(--maroon);
+  color:#fff;
+  width:20px;
+  height:20px;
+  font-size:12px;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  border-radius:50%;
+  font-weight:800;
+}
+
+    /* TITLE */
+    h1{
+      text-align:center;
+      font-family:Georgia, serif;
+      color:var(--maroon);
+      font-size:58px;
+      margin:10px 0 15px;
+    }
+
+    /* GRID MENU */
+    .wrap{
+      max-width:520px;
+      margin:0 auto;
+      padding:0 14px;
+    }
+    .grid{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:18px;
+    }
+
+    .card{
+      background:var(--card);
+      border-radius:20px;
+      padding:14px;
+      position:relative;
+      min-height:165px;
+      cursor:pointer;
+      box-shadow:0 10px 20px rgba(0,0,0,.08);
+      overflow:hidden;
+      transition:.1s;
+    }
+    .card:active{transform:scale(.98);}
+
+    .img{
+      width:92px;
+      height:100px;
+      border-radius:14px;
+      object-fit:cover;
+      background:#eee;
+    }
+
+    .info{
+      position:absolute;
+      left:120px;
+      top:22px;
+      right:14px;
+    }
+
+    .name{
+      font-family:Georgia, serif;
+      font-weight:900;
+      font-size:18px;
+      color:var(--maroon);
+      line-height:1;
+      margin-bottom:8px;
+    }
+    .price{
+      font-size:18px;
+      font-weight:700;
+      color:#333;
+    }
+
+    /* GARIS BAWAH */
+    .line{
+      margin-top:18px;
+      border-top:4px solid var(--line);
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- TOP -->
+  <div class="top">
+    <div class="logo">sifouteen</div>
+    <div class="cart" onclick="goCart()">
+  🛒
+  <div class="badge" id="badge">0</div>
+</div>
+  </div>
+
+  <!-- TITLE -->
+  <h1>Makanan</h1>
+
+  <!-- GRID -->
+  <div class="wrap">
+    <div class="grid" id="grid"></div>
+    <div class="line"></div>
+  </div>
+
+<script>
+  // ===== DATA MAKANAN =====
+  const foods = [
+    {name:"Nasi\nGoreng", price:10000, img:"https://raw.githubusercontent.com/bili-aja/tugas-website/main/nasi%20goreng.jpg"},
+    {name:"Siomay", price:10000, img:"https://raw.githubusercontent.com/bili-aja/tugas-website/main/somay.jpg"},
+    {name:"Seblak", price:10000, img:"https://raw.githubusercontent.com/bili-aja/tugas-website/main/seblak.jpg"},
+    {name:"Ayam\nGeprek", price:10000, img:"https://raw.githubusercontent.com/bili-aja/tugas-website/main/ayam%20geprek.jpg"},
+    {name:"Rice\nBowl", price:10000, img:"https://raw.githubusercontent.com/bili-aja/tugas-website/main/rice%20bowl.jpg"},
+    {name:"Bakso", price:10000, img:"https://raw.githubusercontent.com/bili-aja/tugas-website/main/bakso.jpg"},
+    {name:"Bakso\nPedas", price:5000, img:"https://raw.githubusercontent.com/bili-aja/tugas-website/main/bakso%20pedas.jpg"},
+    {name:"Ayam\nPedas", price:13000, img:"https://raw.githubusercontent.com/bili-aja/tugas-website/main/ayam%20pedas.jpg"}
+  ];
+
+  // ===== KERANJANG (UNTUK CHECKOUT NANTI) =====
+  let cart = JSON.parse(localStorage.getItem("cart_sifouteen")) || [];
+
+  function formatRupiah(num){
+    return "Rp. " + num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+  }
+
+  function saveCart(){
+    localStorage.setItem("cart_sifouteen", JSON.stringify(cart));
+  }
+
+  // ===== RENDER MENU =====
+  function render(){
+    const grid = document.getElementById("grid");
+    grid.innerHTML = "";
+
+    foods.forEach((f, i) => {
+      const div = document.createElement("div");
+      div.className = "card";
+
+      div.innerHTML = `
+        <img class="img" src="${f.img}" />
+        <div class="info">
+          <div class="name">${f.name.replace("\n","<br>")}</div>
+          <div class="price">${formatRupiah(f.price)}</div>
+        </div>
+      `;
+
+      // klik card = tambah ke keranjang
+      div.onclick = () => addToCart(i);
+
+      grid.appendChild(div);
+    });
+  }
+
+  function addToCart(index){
+    const f = foods[index];
+
+    const found = cart.find(x => x.name === f.name);
+    if(found){
+      found.qty += 1;
+    }else{
+      cart.push({
+        name: f.name,
+        price: f.price,
+        img: f.img,
+        qty: 1
+      });
+    }
+
+    saveCart();
+    alert("✅ Ditambahkan: " + f.name.replace("\n"," "));
+  }
+  function goCart(){
+  window.location.href = "cart.html";
+}
+
+function updateBadge(){
+  let total = 0;
+  cart.forEach(x => total += x.qty);
+  document.getElementById("badge").innerText = total;
+}
+
+  // INIT
+  render();
+  updateBadge();
+</script>
+
+</body>
+</html>
